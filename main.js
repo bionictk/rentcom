@@ -7,6 +7,8 @@ function initMap() {
         center: new google.maps.LatLng(40.74415, -73.94884),
         // mapTypeId: google.maps.MapTypeId.TERRAIN
         gestureHandling: 'greedy',
+        streetViewControl: false,
+        fullscreenControl: false,
         styles: [{
                 "featureType": "administrative.land_parcel",
                 "elementType": "labels",
