@@ -81,7 +81,10 @@
 
         function onFinished() {
             var url = new URL(window.location);
-            url.pathname = "/rentcom.html";
+            if (url.pathname == "/rentcom/")
+                url.pathname = "/rentcom/rentcom.html";
+            else
+                url.pathname = "/rentcom.html"
             url.searchParams.set("v", 3);
             document.location = url;
         }
