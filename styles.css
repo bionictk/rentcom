@@ -17,20 +17,27 @@ svg {
 }
 
 .demo-card-square.mdl-card {
-
+    margin-bottom: 20px;
     /* height: 320px; */
 }
 
-.demo-card-square>.mdl-card__title {
-    color: rgb(50, 79, 84);
-    background: rgb(36, 39, 48);
+.secondcard {
+    height: 300px;
 }
 
+.demo-card-square>.mdl-card__title {
+    color: white;
+    background: #6200EE;
+}
 
+.demo-card-square>.mdl-card__title.recommendationcard {
+    color: black;
+    background: #03dac5;
+}
 
 .places svg {
-    /* width: 60px; */
-    /* height: 20px; */
+    width: 20px;
+    height: 20px;
     /* padding-right: 100px; */
     font: 10px sans-serif;
 }
@@ -71,7 +78,7 @@ svg {
 }
 
 .demo-card-square {
-    background: rgb(223, 225, 233);
+    background: rgb(238, 239, 244);
 }
 
 .mdl-grid {
@@ -82,4 +89,14 @@ svg {
 .mdl-cell {
     padding: 0px;
     margin: 5px;
+}
+
+.mdl-textfield {
+    padding: 0px;
+}
+
+.main-logo-image {
+    margin-top: 5px;
+    height: 40px;
+    width: 130px;
 }
