@@ -1,83 +1,123 @@
-mapboxgl.accessToken =
-    'pk.eyJ1IjoiYmlvbmljdGsiLCJhIjoiY2puYXFmOWo2MDAwNjNwdDZxcWpjMWVyeCJ9.dOLJRxC_rZHsoRuPLHwPWA';
+var map;
+// animations!!! https://github.com/daneden/animate.css?files=1
 
-var map = new mapboxgl.Map({
-    container: 'map', // container id
-    style: 'mapbox://styles/mapbox/dark-v9', //stylesheet location
-    center: [-74.00884, 40.74415], // starting position
-    zoom: 12 // starting zoom
-});
+function initMap() {
+    map = new google.maps.Map(d3.select("#map").node(), {
+        zoom: 12,
+        center: new google.maps.LatLng(40.74415, -73.94884),
+        // mapTypeId: google.maps.MapTypeId.TERRAIN
+    });
 
-map.addControl(new mapboxgl.FullscreenControl());
-// map.scrollZoom.disable()
+    var url = "rental_coords_small_mod.csv"
+    // var url = "rental_coords_large.csv"
 
-// Setup our svg layer that we can manipulate with d3
-var container = map.getCanvasContainer()
-var svg = d3.select(container).append("svg")
+    d3.csv(url, function (err, data) {
+        data = data.slice(0, 100)
+        var overlay = new google.maps.OverlayView();
 
-// we calculate the scale given mapbox state (derived from viewport-mercator-project's code)
-// to define a d3 projection
-function getD3() {
-    var bbox = document.body.getBoundingClientRect();
-    var center = map.getCenter();
-    var zoom = map.getZoom();
-    // 512 is hardcoded tile size, might need to be 256 or changed to suit your map config
-    var scale = (512) * 0.5 / Math.PI * Math.pow(2, zoom);
+        // Add the container when the overlay is added to the map.
+        overlay.onAdd = function () {
+            var layer = d3.select(this.getPanes().overlayLayer).append("div")
+                .attr("class", "places");
 
-    var d3projection = d3.geo.mercator()
-        .center([center.lng, center.lat])
-        .translate([bbox.width / 2, bbox.height / 2])
-        .scale(scale);
+            // Draw each marker as a separate SVG element.
+            // We could use a single SVG, but what size would it have?
+            overlay.draw = function () {
+                var projection = this.getProjection(),
+                    padding = 10;
 
-    return d3projection;
+                var marker = layer.selectAll("svg")
+                    .data(d3.entries(data))
+                    .each(transform) // update existing markers
+                    .enter().append("svg")
+                    .each(transform)
+                    .attr("class", "marker");
+
+                // Add a circle.
+                marker.append("circle")
+                    .attr("r", 6)
+                    .attr("cx", padding)
+                    .attr("cy", padding);
+
+                // Add a label.
+                // marker.append("text")
+                //     .attr("x", padding + 7)
+                //     .attr("y", padding)
+                //     .attr("dy", ".31em")
+                //     .text(function (d) {
+                //         return "test";
+                //     });
+
+                function transform(d) {
+                    // console.log(+d.value.lat);
+                    d = new google.maps.LatLng(+d.value.long, +d.value.lat);
+                    d = projection.fromLatLngToDivPixel(d);
+                    // console.log(d);
+                    return d3.select(this)
+                        .style("left", (d.x - padding) + "px")
+                        .style("top", (d.y - padding) + "px")
+                    // .style("width", "60px");
+                }
+            };
+        };
+
+        // Bind our overlay to the map…
+        overlay.setMap(map);
+    })
 }
-// calculate the original d3 projection
-var d3Projection = getD3();
 
-var path = d3.geo.path()
+function loadImages() {
+    var homeID = Math.random() * 33 | 0;
 
-var url = "rental_coords_small_mod.csv"
-// var url = "rental_coords_small.csv"
-// d3.json(url, function (err, data) {
-d3.csv(url, function (err, data) {
-    var dots = svg.selectAll("circle.dot")
-        .data(data)
+    var loadImgs = new Promise((resolve, reject) => {
+        var bCheckEnabled = true;
+        var bFinishCheck = false;
 
-    dots.enter().append("circle").classed("dot", true)
-        .attr("r", 1)
-        .style({
-            // fill: "#0082a3",
-        })
-        // .transition().duration(1000)
-        .attr("r", 3)
+        var img;
+        var images = [];
+        var i = 0;
 
-    function render() {
-        d3Projection = getD3();
-        path.projection(d3Projection)
+        var myInterval = setInterval(loadImage, 1);
 
-        dots
-            .attr({
-                cx: function (d) {
-                    var t = [+d.lat, +d.long];
-                    var x = d3Projection(t)[0];
-                    return x
-                },
-                cy: function (d) {
-                    var t = [+d.lat, +d.long];
-                    var y = d3Projection(t)[1];
-                    return y
-                },
-            })
-    }
+        function loadImage() {
+            if (bFinishCheck) {
+                clearInterval(myInterval);
+                resolve(images);
+            }
 
-    // re-render our visualization whenever the view changes
-    map.on("viewreset", function () {
-        render()
-    })
-    map.on("move", function () {
-        render()
-    })
+            if (bCheckEnabled) {
+                bCheckEnabled = false;
 
-    // render our initial visualization
-    render()
-})
+                img = new Image();
+                img.onload = _ => {
+                    images.push(img);
+                    i++;
+                    bCheckEnabled = true;
+                };
+                img.onerror = _ => bFinishCheck = true;
+                img.src = 'rent_imgs/home' + homeID + "/img" + i + '.jpg';
+            }
+        }
+    }).then(images => {
+        var image_parent = d3.select("#home_images");
+        image_parent.selectAll("div.carousel-item")
+            .data(images)
+            .enter()
+            .append("div").classed("carousel-item", true)
+            .append("img").classed("d-block w-100", true)
+            .attr("src", (d, i) => "rent_imgs/home" + homeID + "/img" + i + ".jpg")
+            .style("height", "300px");
+
+        image_parent.select(".carousel-item").classed("active", true);
+
+        var indc_parent = d3.select("#home_image_indicators");
+        indc_parent.selectAll("li")
+            .data(images)
+            .enter()
+            .append("li")
+            .attr("data-target", "#carouselExampleIndicators")
+            .attr("data-slide-to", (d, i) => i);
+
+        indc_parent.select("li").classed("active", true);
+    });
+}
