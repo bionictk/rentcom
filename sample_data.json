@@ -1,0 +1,37 @@
+{
+   "listings":[
+      {
+         "id":2,
+         "latitude":40.7388,
+         "longitude":-74.0018,
+         "bedrooms":1.0,
+         "bathrooms":1.0,
+         "pets":0.0,
+         "dishwasher":1.0,
+         "wd":0.0,
+         "parking":0.0
+      },
+      {
+         "id":4,
+         "latitude":40.8241,
+         "longitude":-73.9493,
+         "bedrooms":4.0,
+         "bathrooms":1.0,
+         "pets":0.0,
+         "dishwasher":1.0,
+         "wd":0.0,
+         "parking":0.0
+      },
+      {
+         "id":7,
+         "latitude":40.7427,
+         "longitude":-73.9957,
+         "bedrooms":1.0,
+         "bathrooms":2.0,
+         "pets":0.0,
+         "dishwasher":1.0,
+         "wd":0.0,
+         "parking":0.0
+      }
+   ]
+}

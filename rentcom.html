@@ -41,18 +41,18 @@
                             <span class="mdl-checkbox__label">Min Price: </span>
                         </div>
                         <div class="mdl-cell mdl-cell--8-col">
-                            <form onSubmit="alert(1)">
+                            <form>
                                 <div class="mdl-textfield mdl-js-textfield">
                                     <input class="mdl-textfield__input" type="text" pattern="-?[0-9]*(\.[0-9]+)?"
-                                        id="min-price" value="0">
+                                        id="min-price" value="0" onchange="updateMinPriceSlider()">
                                     <label class="mdl-textfield__label" for="min-price">Number...</label>
                                     <span class="mdl-textfield__error">Input is not a number!</span>
                                 </div>
                             </form>
                         </div>
                     </div>
-                    <input class="mdl-slider mdl-js-slider" type="range" min="0" max="100" value="0" tabindex="0"
-                        id="min-price-slider">
+                    <input class="mdl-slider mdl-js-slider" type="range" min="0" max="100" value="0" tabindex="10"
+                        id="min-price-slider" onchange="updateMinPrice()">
                 </div>
 
                 <div class="mdl-card__actions mdl-card--border">
@@ -61,10 +61,10 @@
                             <span class="mdl-checkbox__label">Max Price: </span>
                         </div>
                         <div class="mdl-cell mdl-cell--8-col">
-                            <form onSubmit="alert(1)">
+                            <form>
                                 <div class="mdl-textfield mdl-js-textfield">
                                     <input class="mdl-textfield__input" type="text" pattern="-?[0-9]*(\.[0-9]+)?"
-                                        id="max-price" value="3000000">
+                                        id="max-price" value="3000000" onchange="updateMaxPriceSlider()">
                                     <label class="mdl-textfield__label" for="max-price">Number...</label>
                                     <span class="mdl-textfield__error">Input is not a number!</span>
                                 </div>
@@ -72,14 +72,14 @@
                         </div>
                     </div>
                     <input class="mdl-slider mdl-js-slider" type="range" min="0" max="3000000" value="3000000"
-                        tabindex="0" id="max-price-slider">
+                        tabindex="0" id="max-price-slider" onchange="updateMaxPrice()">
                 </div>
 
                 <div class="mdl-card__actions mdl-card--border">
                     <div class="mdl-grid">
                         <div class="mdl-cell mdl-cell--6-col">
                             <span class="mdl-checkbox__label">Bedrooms: </span>
-                            <select id="bedrooms">
+                            <select id="bedrooms" onchange="updateFilters()">
                                 <option value="0">0</option>
                                 <option value="1" selected>1</option>
                                 <option value="2">2</option>
@@ -89,7 +89,7 @@
                         </div>
                         <div class="mdl-cell mdl-cell--6-col">
                             <span class="mdl-checkbox__label">Bathrooms: </span>
-                            <select id="bathrooms">
+                            <select id="bathrooms" onchange="updateFilters()">
                                 <option value="0">0</option>
                                 <option value="1" selected>1</option>
                                 <option value="2">2</option>
@@ -105,30 +105,28 @@
                     <div class="mdl-grid">
                         <div class="mdl-cell mdl-cell--6-col">
                             <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="pets">
-                                <input type="checkbox" id="pets" class="mdl-checkbox__input"
-                                    onchange="console.log(this.id + ' ' + this.checked)">
+                                <input type="checkbox" id="pets" class="mdl-checkbox__input" onchange="updateFilters()">
                                 <span class="mdl-checkbox__label">Pets</span>
                             </label>
                             <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="dishwasher">
                                 <input type="checkbox" id="dishwasher" class="mdl-checkbox__input"
-                                    onchange="console.log(this.id + ' ' + this.checked)">
+                                    onchange="updateFilters()">
                                 <span class="mdl-checkbox__label">Dishwasher</span>
                             </label>
                             <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="wd">
-                                <input type="checkbox" id="wd" class="mdl-checkbox__input"
-                                    onchange="console.log(this.id + ' ' + this.checked)">
+                                <input type="checkbox" id="wd" class="mdl-checkbox__input" onchange="updateFilters()">
                                 <span class="mdl-checkbox__label">Washer/Dryer</span>
                             </label>
                         </div>
                         <div class="mdl-cell mdl-cell--6-col">
                             <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="parking">
                                 <input type="checkbox" id="parking" class="mdl-checkbox__input"
-                                    onchange="console.log(this.id + ' ' + this.checked)">
+                                    onchange="updateFilters()">
                                 <span class="mdl-checkbox__label">Parking</span>
                             </label>
                             <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="haspictures">
                                 <input type="checkbox" id="haspictures" class="mdl-checkbox__input"
-                                    onchange="console.log(this.id + ' ' + this.checked)">
+                                    onchange="updateFilters()">
                                 <span class="mdl-checkbox__label">Has Pictures</span>
                             </label>
                         </div>
@@ -136,7 +134,7 @@
                 </div>
 
                 <div class="mdl-card__actions mdl-card--border">
-                    <button class="mdl-button mdl-js-button mdl-button--primary" onclick="alert(2)">
+                    <button class="mdl-button mdl-js-button mdl-button--primary" onclick="resetChoices()">
                         Reset Choices
                     </button>
                 </div>
@@ -191,9 +189,10 @@
             <div class="demo-card-square mdl-card mdl-shadow--2dp popupcardstyle animated" id="hovercard"
                 style="visibility: hidden;">
                 <div>
-                    asdfasd
-                    asdf
-                    asdf
+                    <span>ID</span><br>
+                    Price<br>
+                    asdf<br>
+                    asdf<br>
                     as<br>
                     asdf<br>
                 </div>
@@ -220,7 +219,32 @@
         async defer></script>
 
     <script>
+        function updateMinPrice() {
+            document.getElementById("min-price").value = document.getElementById("min-price-slider").value;
+            updateFilters();
+        }
 
+        function updateMinPriceSlider() {
+            document.getElementById("min-price-slider").MaterialSlider.change(document.getElementById("min-price")
+                .value);
+            updateFilters();
+        }
+
+        function updateMaxPrice() {
+            document.getElementById("max-price").value = document.getElementById("max-price-slider").value;
+            updateFilters();
+        }
+
+        function updateMaxPriceSlider() {
+            document.getElementById("max-price-slider").MaterialSlider.change(document.getElementById("max-price")
+                .value);
+            updateFilters();
+        }
+
+        function resetChoices() {
+            // TODO prestore then restore default values
+            updateFilters();
+        }
     </script>
 
 </body>
