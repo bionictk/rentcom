@@ -41,21 +41,26 @@
         <br>
         <button id="left_button" class="mdl-button mdl-js-button mdl-button--raised" style="margin-right:50px;" disabled
             onclick="onbutton(0)">
-            Button1
+            Yes
         </button>
         <button id="right_button" class="mdl-button mdl-js-button mdl-button--raised" disabled onclick="onbutton(1)">
-            Button2
+            No
         </button>
     </div>
 
     <script>
-        var questions = ["Left or right?", "Up or down?", "Top or bottom?", "Good or bad?"]
+        var questions = ["Would you wait in line for 30 minutes if you were paid $30?",
+            "Would you pay $300/mo to live 30 minutes closer to work?",
+            "Do you want a shorter than average commute?",
+            "Would you commute 30 minutes longer for a larger apartment?"
+        ];
+
         var left_button = document.getElementById("left_button");
         var right_button = document.getElementById("right_button");
         var question = document.getElementById("question");
 
         var answers = [];
-        var q_number = 2;
+        var q_number = 0;
 
         function nextQ() {
             if (q_number == questions.length) onFinished();

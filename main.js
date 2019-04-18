@@ -50,24 +50,35 @@ function initMap() {
         ]
     });
 
+    var overlay = new google.maps.OverlayView();
+
+    map.addListener('click', (e) => {
+        var latlng = e.latLng;
+        var lat = latlng.lat();
+        var long = latlng.lng();
+        console.log(lat, long);
+    });
+
+
     var url = "rental_coords_small_mod.csv"
     // var url = "rental_coords_large.csv"
     var jsonFile = "sample_data.json";
 
-    d3.json(jsonFile)
-        // d3.csv(url, d => {
-        //         // console.log(d);
-        //         return {
-        //             id: +d.id,
-        //             latitude: +d.long,
-        //             longitude: +d.lat
-        //         };
-        //     })
+    // d3.json(jsonFile)
+    d3.csv(url, d => {
+            // console.log(d);
+            return {
+                id: +d.id,
+                latitude: +d.long,
+                longitude: +d.lat
+            };
+        })
         .then(data => {
             // console.log(data);
-            // data = data.slice(0, 100)
-            data = data.listings;
-            var overlay = new google.maps.OverlayView();
+            data = data.slice(0, 100)
+            // data = data.listings;
+
+            document.getElementById("control-panel").style.height = window.innerHeight + "px";
 
             // Add the container when the overlay is added to the map.
             overlay.onAdd = function () {
@@ -159,7 +170,7 @@ function initMap() {
                 };
             };
 
-            map.addListener('click', () => {
+            map.addListener('click', (e) => {
                 d3.select("#hovercard")
                     .classed("fadeOutRight", true)
                     .classed("fadeInRight", false);
@@ -171,8 +182,8 @@ function initMap() {
                         .style("fill-opacity", "0.6");
                     clicked = undefined;
                 }
-
             });
+
             // Bind our overlay to the map…
             overlay.setMap(map);
         })
