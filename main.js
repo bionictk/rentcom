@@ -2,10 +2,20 @@ var startColor = "1fbad6",
     endColor = "#EF3C79";
 
 var clicked = undefined;
+var circle;
 
 var map;
+var directionsDisplay;
+var directionsService;
+
+var workPlace = [40.74415, -73.94884];
 
 function initMap() {
+    directionsService = new google.maps.DirectionsService();
+    directionsDisplay = new google.maps.DirectionsRenderer({
+        preserveViewport: true,
+        suppressMarkers: true
+    });
     map = new google.maps.Map(d3.select("#map").node(), {
         zoom: 12,
         center: new google.maps.LatLng(40.74415, -73.94884),
@@ -99,7 +109,7 @@ function initMap() {
                         .attr("class", "marker");
 
                     // Add a circle.
-                    var circle = marker.append("circle")
+                    circle = marker.append("circle")
                         .attr("id", d => "listing" + d.value.id)
                         .attr("r", 10)
                         .attr("cx", padding)
@@ -113,9 +123,19 @@ function initMap() {
                             d3.select("#listing" + clicked)
                                 .transition().duration(150)
                                 .style("fill", startColor)
-                                .style("fill-opacity", "0.6");
+                                .style("fill-opacity", "0.6")
+                                .attr("r", 10);
+
+                            d3.select("#listing" + d.value.id)
+                                .transition().duration(150)
+                                .attr("r", 10);
                             clicked = undefined;
                         }
+
+                        d3.selectAll("circle").filter(e => e.value.id != d.value.id)
+                            .style("fill", startColor)
+                            .transition().duration(400)
+                            .attr("r", 7);
 
                         clicked = d.value.id;
 
@@ -126,6 +146,20 @@ function initMap() {
                             .classed("fadeInRight", true);
 
                         // console.log(d.value.id)
+                        var start = new google.maps.LatLng(d.value.latitude, d.value.longitude);
+                        var end = new google.maps.LatLng(workPlace[0], workPlace[1]);
+
+                        var request = {
+                            origin: start,
+                            destination: end,
+                            travelMode: google.maps.TravelMode.DRIVING
+                        };
+                        directionsService.route(request, function (response, status) {
+                            if (status == google.maps.DirectionsStatus.OK) {
+                                directionsDisplay.setMap(map);
+                                directionsDisplay.setDirections(response);
+                            };
+                        });
                     };
 
                     var onHover = (d) => {
@@ -176,12 +210,18 @@ function initMap() {
                     .classed("fadeInRight", false);
 
                 if (clicked != undefined) {
+                    d3.selectAll("circle")
+                        .transition().duration(400)
+                        .attr("r", 10);
+
                     d3.select("#listing" + clicked)
                         .transition().duration(150)
                         .style("fill", startColor)
                         .style("fill-opacity", "0.6");
                     clicked = undefined;
                 }
+
+                directionsDisplay.setMap(null);
             });
 
             // Bind our overlay to the map…
@@ -189,9 +229,7 @@ function initMap() {
         })
 }
 
-function loadImages(id) {
-    var homeID = Math.random() * 33 | 0;
-
+function loadImages(homeID) {
     var loadImgs = new Promise((resolve, reject) => {
         var bCheckEnabled = true;
         var bFinishCheck = false;
