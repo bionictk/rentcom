@@ -22,9 +22,22 @@
 </head>
 
 <body>
+    <dialog class="mdl-dialog" style="width: 500px;">
+        <h3 class="mdl-dialog__title">Where do you work?</h3>
+        <div class="mdl-dialog__content">
+            <h6>
+                Now <i>click</i> on the map to tell us where you work.<br>
+                You can always refresh this page to restart.
+            </h6>
+        </div>
+        <div class="mdl-dialog__actions">
+            <button type="button" class="mdl-button closeD">Let's go</button>
+        </div>
+    </dialog>
     <div class="mdl-grid">
 
         <div class="mdl-cell mdl-cell--3-col" style="overflow: auto;" id="control-panel">
+
             <div class="demo-card-square mdl-card mdl-shadow--2dp filtercardstyle"
                 style="height:50px; min-height:50px; background: white">
                 <img class="main-logo-image" src="logo.png">
@@ -33,6 +46,39 @@
             <div class="demo-card-square mdl-card mdl-shadow--2dp filtercardstyle">
                 <div class="mdl-card__title">
                     <h2 class="mdl-card__title-text">Preferences</h2>
+                </div>
+
+                <div class="mdl-card__actions mdl-card--border">
+                    <div class="mdl-grid">
+                        <div class="mdl-cell mdl-cell--3-col">
+                            <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="option-1">
+                                <input type="radio" id="option-1" class="mdl-radio__button" name="transit_options"
+                                    value="car" checked onchange="updateFilters()">
+                                <span class="mdl-radio__label">Car</span>
+                            </label>
+                        </div>
+                        <div class="mdl-cell mdl-cell--3-col">
+                            <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="option-2">
+                                <input type="radio" id="option-2" class="mdl-radio__button" name="transit_options"
+                                    value="walk" onchange="updateFilters()">
+                                <span class="mdl-radio__label">Walk</span>
+                            </label>
+                        </div>
+                        <div class="mdl-cell mdl-cell--3-col">
+                            <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="option-3">
+                                <input type="radio" id="option-3" class="mdl-radio__button" name="transit_options"
+                                    value="bike" onchange="updateFilters()">
+                                <span class="mdl-radio__label">Bike</span>
+                            </label>
+                        </div>
+                        <div class="mdl-cell mdl-cell--3-col">
+                            <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="option-4">
+                                <input type="radio" id="option-4" class="mdl-radio__button" name="transit_options"
+                                    value="transit" onchange="updateFilters()">
+                                <span class="mdl-radio__label">Transit</span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="mdl-card__actions mdl-card--border">
@@ -125,7 +171,7 @@
                                 <span class="mdl-checkbox__label">Parking</span>
                             </label>
                             <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="haspictures">
-                                <input type="checkbox" id="haspictures" class="mdl-checkbox__input"
+                                <input type="checkbox" id="haspictures" class="mdl-checkbox__input" checked
                                     onchange="updateFilters()">
                                 <span class="mdl-checkbox__label">Has Pictures</span>
                             </label>
@@ -188,13 +234,19 @@
 
             <div class="demo-card-square mdl-card mdl-shadow--2dp popupcardstyle animated" id="hovercard"
                 style="visibility: hidden;">
-                <div>
-                    <span>ID</span><br>
-                    Price<br>
-                    asdf<br>
-                    asdf<br>
-                    as<br>
-                    asdf<br>
+                <div style="margin-left:20px; margin-right: 20px;">
+                    <br>
+                    <h2 id="c-address">147 Peachtree Rd NW</h2><br>
+                    Monthly rent: $<span id="c-price">500,000</span><br>
+                    Bedrooms: <span id="c-bedrooms">2</span><br>
+                    Bathrooms: <span id="c-bathrooms">1</span><br>
+                    <br>
+                    Has Pictures: <span id="c-pics">Yes</span><br>
+                    Pets allowed: <span id="c-pics">Yes</span><br>
+                    Parking: <span id="c-pics">Yes</span><br>
+                    Dishwasher: <span id="c-pics">Yes</span><br>
+                    Washer/Dryer: <span id="c-pics">Yes</span><br>
+                    <br>
                 </div>
                 <div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel">
                     <ol id="home_image_indicators" class="carousel-indicators">
@@ -212,6 +264,9 @@
                 </div>
             </div>
         </div>
+    </div>
+    <div id="work">
+        <img class="workIcon" src="work.png">
     </div>
     <!-- <div id='map'></div> -->
     <script src="main.js"></script>
@@ -250,6 +305,3 @@
 </body>
 
 </html>
-
-
-<!-- Thanks! We'll use this to help you find your next home. -->

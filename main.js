@@ -8,7 +8,17 @@ var map;
 var directionsDisplay;
 var directionsService;
 
-var workPlace = [40.74415, -73.94884];
+var workPlace = undefined;
+
+var dialog = document.querySelector('dialog');
+if (!dialog.showModal) {
+    dialogPolyfill.registerDialog(dialog);
+}
+dialog.querySelector('.closeD').addEventListener('click', function () {
+    dialog.close();
+});
+
+var getListings;
 
 function initMap() {
     directionsService = new google.maps.DirectionsService();
@@ -62,171 +72,185 @@ function initMap() {
 
     var overlay = new google.maps.OverlayView();
 
-    map.addListener('click', (e) => {
+    dialog.showModal();
+
+    var workPlaceClickListener = map.addListener('click', (e) => {
         var latlng = e.latLng;
         var lat = latlng.lat();
         var long = latlng.lng();
         console.log(lat, long);
+
+        Popup = createPopupClass();
+        popup = new Popup(new google.maps.LatLng(lat, long), document.getElementById('work'));
+        popup.setMap(map);
+
+        document.getElementById("pets").removeAttribute("disabled");
+
+
+        workPlace = [lat, long];
+        google.maps.event.removeListener(workPlaceClickListener);
+        setTimeout(getListings, 500);
     });
 
+    getListings = () => {
+        var url = "rental_coords_small_mod.csv"
+        // var url = "rental_coords_large.csv"
+        var jsonFile = "sample_data.json";
 
-    var url = "rental_coords_small_mod.csv"
-    // var url = "rental_coords_large.csv"
-    var jsonFile = "sample_data.json";
-
-    // d3.json(jsonFile)
-    d3.csv(url, d => {
-            // console.log(d);
-            return {
-                id: +d.id,
-                latitude: +d.long,
-                longitude: +d.lat
-            };
-        })
-        .then(data => {
-            // console.log(data);
-            data = data.slice(0, 100)
-            // data = data.listings;
-
-            document.getElementById("control-panel").style.height = window.innerHeight + "px";
-
-            // Add the container when the overlay is added to the map.
-            overlay.onAdd = function () {
-                var layer = d3.select(this.getPanes().floatPane).append("div")
-                    .attr("class", "places");
-
-                // Draw each marker as a separate SVG element.
-                // We could use a single SVG, but what size would it have?
-                overlay.draw = function () {
-                    var projection = this.getProjection(),
-                        padding = 10;
-
-                    var marker = layer.selectAll("svg")
-                        .data(d3.entries(data))
-                        .each(transform) // update existing markers
-                        .enter().append("svg")
-                        .each(transform)
-                        .attr("class", "marker");
-
-                    // Add a circle.
-                    circle = marker.append("circle")
-                        .attr("id", d => "listing" + d.value.id)
-                        .attr("r", 10)
-                        .attr("cx", padding)
-                        .attr("cy", padding)
-                        .style("fill", startColor)
-                        .style("fill-opacity", "0.6");
-
-                    var onClick = (d) => {
-                        d3.event.stopPropagation();
-                        if (clicked != undefined && clicked != d.value.id) {
-                            d3.select("#listing" + clicked)
-                                .transition().duration(150)
-                                .style("fill", startColor)
-                                .style("fill-opacity", "0.6")
-                                .attr("r", 10);
-
-                            d3.select("#listing" + d.value.id)
-                                .transition().duration(150)
-                                .attr("r", 10);
-                            clicked = undefined;
-                        }
-
-                        d3.selectAll("circle").filter(e => e.value.id != d.value.id)
-                            .style("fill", startColor)
-                            .transition().duration(400)
-                            .attr("r", 7);
-
-                        clicked = d.value.id;
-
-                        loadImages(d.value.id % 33);
-                        d3.select("#hovercard")
-                            .style("visibility", "visible")
-                            .classed("fadeOutRight", false)
-                            .classed("fadeInRight", true);
-
-                        // console.log(d.value.id)
-                        var start = new google.maps.LatLng(d.value.latitude, d.value.longitude);
-                        var end = new google.maps.LatLng(workPlace[0], workPlace[1]);
-
-                        var request = {
-                            origin: start,
-                            destination: end,
-                            travelMode: google.maps.TravelMode.DRIVING
-                        };
-                        directionsService.route(request, function (response, status) {
-                            if (status == google.maps.DirectionsStatus.OK) {
-                                directionsDisplay.setMap(map);
-                                directionsDisplay.setDirections(response);
-                            };
-                        });
-                    };
-
-                    var onHover = (d) => {
-                        d3.select("#listing" + d.value.id)
-                            .transition().duration(200)
-                            .style("fill", endColor)
-                            .style("fill-opacity", "1.0");
-                    };
-
-                    var onHoverEnd = (d) => {
-                        if (d.value.id != clicked) {
-                            d3.select("#listing" + d.value.id)
-                                .transition().duration(150)
-                                .style("fill", startColor)
-                                .style("fill-opacity", "0.6");
-                        }
-                    };
-
-                    circle.on("click", onClick);
-                    circle.on("mouseover", onHover);
-                    circle.on("mouseout", onHoverEnd);
-
-                    marker.append("text")
-                        .attr("x", padding)
-                        .attr("y", padding)
-                        .attr("dy", ".35em")
-                        .text(function (d) {
-                            return d.value.id;
-                        })
-                        .style("pointer-events", "none");
-
-                    function transform(d) {
-                        // console.log(d);
-                        d = d.value;
-                        d = new google.maps.LatLng(d.latitude, d.longitude);
-                        d = projection.fromLatLngToDivPixel(d);
-
-                        return d3.select(this)
-                            .style("left", (d.x - padding) + "px")
-                            .style("top", (d.y - padding) + "px")
-                    }
+        // d3.json(jsonFile)
+        d3.csv(url, d => {
+                // console.log(d);
+                return {
+                    id: +d.id,
+                    latitude: +d.long,
+                    longitude: +d.lat
                 };
-            };
+            })
+            .then(data => {
+                // console.log(data);
+                data = data.slice(0, 100)
+                // data = data.listings;
 
-            map.addListener('click', (e) => {
-                d3.select("#hovercard")
-                    .classed("fadeOutRight", true)
-                    .classed("fadeInRight", false);
+                document.getElementById("control-panel").style.height = window.innerHeight + "px";
 
-                if (clicked != undefined) {
-                    d3.selectAll("circle")
-                        .transition().duration(400)
-                        .attr("r", 10);
+                // Add the container when the overlay is added to the map.
+                overlay.onAdd = function () {
+                    var layer = d3.select(this.getPanes().floatPane).append("div")
+                        .attr("class", "places");
 
-                    d3.select("#listing" + clicked)
-                        .transition().duration(150)
-                        .style("fill", startColor)
-                        .style("fill-opacity", "0.6");
-                    clicked = undefined;
-                }
+                    // Draw each marker as a separate SVG element.
+                    // We could use a single SVG, but what size would it have?
+                    overlay.draw = function () {
+                        var projection = this.getProjection(),
+                            padding = 10;
 
-                directionsDisplay.setMap(null);
-            });
+                        var marker = layer.selectAll("svg")
+                            .data(d3.entries(data))
+                            .each(transform) // update existing markers
+                            .enter().append("svg")
+                            .each(transform)
+                            .attr("class", "marker");
 
-            // Bind our overlay to the map…
-            overlay.setMap(map);
-        })
+                        // Add a circle.
+                        circle = marker.append("circle")
+                            .attr("id", d => "listing" + d.value.id)
+                            .attr("r", 10)
+                            .attr("cx", padding)
+                            .attr("cy", padding)
+                            .style("fill", startColor)
+                            .style("fill-opacity", "0.6");
+
+                        var onClick = (d) => {
+                            d3.event.stopPropagation();
+                            if (clicked != undefined && clicked != d.value.id) {
+                                d3.select("#listing" + clicked)
+                                    .transition().duration(150)
+                                    .style("fill", startColor)
+                                    .style("fill-opacity", "0.6")
+                                    .attr("r", 10);
+
+                                d3.select("#listing" + d.value.id)
+                                    .transition().duration(150)
+                                    .attr("r", 10);
+                                clicked = undefined;
+                            }
+
+                            d3.selectAll("circle").filter(e => e.value.id != d.value.id)
+                                .style("fill", startColor)
+                                .transition().duration(400)
+                                .attr("r", 7);
+
+                            clicked = d.value.id;
+
+                            loadImages(d.value.id % 33);
+                            d3.select("#hovercard")
+                                .style("visibility", "visible")
+                                .classed("fadeOutRight", false)
+                                .classed("fadeInRight", true);
+
+                            // console.log(d.value.id)
+                            var start = new google.maps.LatLng(d.value.latitude, d.value.longitude);
+                            var end = new google.maps.LatLng(workPlace[0], workPlace[1]);
+
+                            var request = {
+                                origin: start,
+                                destination: end,
+                                travelMode: google.maps.TravelMode.DRIVING
+                            };
+                            directionsService.route(request, function (response, status) {
+                                if (status == google.maps.DirectionsStatus.OK) {
+                                    directionsDisplay.setMap(map);
+                                    directionsDisplay.setDirections(response);
+                                };
+                            });
+                        };
+
+                        var onHover = (d) => {
+                            d3.select("#listing" + d.value.id)
+                                .transition().duration(200)
+                                .style("fill", endColor)
+                                .style("fill-opacity", "1.0");
+                        };
+
+                        var onHoverEnd = (d) => {
+                            if (d.value.id != clicked) {
+                                d3.select("#listing" + d.value.id)
+                                    .transition().duration(150)
+                                    .style("fill", startColor)
+                                    .style("fill-opacity", "0.6");
+                            }
+                        };
+
+                        circle.on("click", onClick);
+                        circle.on("mouseover", onHover);
+                        circle.on("mouseout", onHoverEnd);
+
+                        marker.append("text")
+                            .attr("x", padding)
+                            .attr("y", padding)
+                            .attr("dy", ".35em")
+                            .text(function (d) {
+                                return d.value.id;
+                            })
+                            .style("pointer-events", "none");
+
+                        function transform(d) {
+                            // console.log(d);
+                            d = d.value;
+                            d = new google.maps.LatLng(d.latitude, d.longitude);
+                            d = projection.fromLatLngToDivPixel(d);
+
+                            return d3.select(this)
+                                .style("left", (d.x - padding) + "px")
+                                .style("top", (d.y - padding) + "px")
+                        }
+                    };
+                };
+
+                map.addListener('click', (e) => {
+                    d3.select("#hovercard")
+                        .classed("fadeOutRight", true)
+                        .classed("fadeInRight", false);
+
+                    if (clicked != undefined) {
+                        d3.selectAll("circle")
+                            .transition().duration(400)
+                            .attr("r", 10);
+
+                        d3.select("#listing" + clicked)
+                            .transition().duration(150)
+                            .style("fill", startColor)
+                            .style("fill-opacity", "0.6");
+                        clicked = undefined;
+                    }
+
+                    directionsDisplay.setMap(null);
+                });
+
+                // Bind our overlay to the map…
+                overlay.setMap(map);
+            })
+    }
 }
 
 function loadImages(homeID) {
@@ -288,9 +312,33 @@ function loadImages(homeID) {
 }
 
 function updateFilters() {
+    if (workPlace == undefined) return;
     // get filter values
+    var radios = document.getElementsByName('transit_options');
+
+    var transit_options;
+    for (var i = 0, length = radios.length; i < length; i++) {
+        if (radios[i].checked) {
+            transit_options = radios[i].value;
+            break;
+        }
+    }
+
+    var minPrice = document.getElementById("min-price").value;
+    var maxPrice = document.getElementById("max-price").value;
+    var bedrooms = document.getElementById("bedrooms").value;
+    var bathrooms = document.getElementById("bathrooms").value;
+    var pets = document.getElementById("pets").checked;
+    var parking = document.getElementById("parking").checked;
+    var dishwasher = document.getElementById("dishwasher").checked;
+    var wd = document.getElementById("wd").checked;
+
+    // console.log(transit_options, minPrice, maxPrice);
+    // console.log(bedrooms, bathrooms);
+    // console.log(pets, parking, dishwasher, wd);
 
     // update showings
+    //TODO: update data points using above filters
 
     // close hover 
     d3.select("#hovercard")
@@ -298,10 +346,81 @@ function updateFilters() {
         .classed("fadeInRight", false);
 
     if (clicked != undefined) {
+        d3.selectAll("circle")
+            .transition().duration(400)
+            .attr("r", 10);
+
         d3.select("#listing" + clicked)
             .transition().duration(150)
             .style("fill", startColor)
             .style("fill-opacity", "0.6");
         clicked = undefined;
     }
+
+    directionsDisplay.setMap(null);
+
+    getListings();
+}
+
+function createPopupClass() {
+    /**
+     * A customized popup on the map.
+     * @param {!google.maps.LatLng} position
+     * @param {!Element} content The bubble div.
+     * @constructor
+     * @extends {google.maps.OverlayView}
+     */
+    function Popup(position, content) {
+        this.position = position;
+
+        content.classList.add('popup-bubble');
+
+        // This zero-height div is positioned at the bottom of the bubble.
+        var bubbleAnchor = document.createElement('div');
+        bubbleAnchor.classList.add('popup-bubble-anchor');
+        bubbleAnchor.appendChild(content);
+
+        // This zero-height div is positioned at the bottom of the tip.
+        this.containerDiv = document.createElement('div');
+        this.containerDiv.classList.add('popup-container');
+        this.containerDiv.appendChild(bubbleAnchor);
+
+        // Optionally stop clicks, etc., from bubbling up to the map.
+        google.maps.OverlayView.preventMapHitsAndGesturesFrom(this.containerDiv);
+    }
+    // ES5 magic to extend google.maps.OverlayView.
+    Popup.prototype = Object.create(google.maps.OverlayView.prototype);
+
+    /** Called when the popup is added to the map. */
+    Popup.prototype.onAdd = function () {
+        this.getPanes().floatPane.appendChild(this.containerDiv);
+    };
+
+    /** Called when the popup is removed from the map. */
+    Popup.prototype.onRemove = function () {
+        if (this.containerDiv.parentElement) {
+            this.containerDiv.parentElement.removeChild(this.containerDiv);
+        }
+    };
+
+    /** Called each frame when the popup needs to draw itself. */
+    Popup.prototype.draw = function () {
+        var divPosition = this.getProjection().fromLatLngToDivPixel(this.position);
+
+        // Hide the popup when it is far out of view.
+        var display =
+            Math.abs(divPosition.x) < 4000 && Math.abs(divPosition.y) < 4000 ?
+            'block' :
+            'none';
+
+        if (display === 'block') {
+            this.containerDiv.style.left = divPosition.x + 'px';
+            this.containerDiv.style.top = divPosition.y + 'px';
+        }
+        if (this.containerDiv.style.display !== display) {
+            this.containerDiv.style.display = display;
+        }
+    };
+
+    return Popup;
 }
