@@ -21,7 +21,9 @@
 
     <link rel="stylesheet" href="libs/roboto.css">
     <link rel="stylesheet" href="libs/mi_icon.css">
-    <link rel="stylesheet" href="libs/material.min.css">
+    <link rel="stylesheet" href="libs/material.indigo-pink.min.css">
+    <script defer src="libs/material.min.js"></script>
+    <!-- <link rel="stylesheet" href="libs/material.min.css"> -->
     <link rel="stylesheet" href="indexStyle.css">
 </head>
 
@@ -34,18 +36,28 @@
         <div class="logo-font android-slogan">Let's get started!</div>
         <div class="logo-font android-sub-slogan">Tell us a little about yourself.</div>
         <br><br>
+
         <div id="question" class="mdl-typography--font-light mdl-typography--display-1-color-contrast"
-            style="transition: 1s opacity; opacity:0;">
+            style="transition: 0.5s opacity; opacity:0;">
             empty
         </div>
         <br>
-        <button id="left_button" class="mdl-button mdl-js-button mdl-button--raised" style="margin-right:50px;" disabled
-            onclick="onbutton(0)">
-            Yes
-        </button>
-        <button id="right_button" class="mdl-button mdl-js-button mdl-button--raised" disabled onclick="onbutton(1)">
-            No
-        </button>
+        <div id="buttons">
+            <button id="left_button" class="mdl-button mdl-js-button mdl-button--raised" style="margin-right:50px;"
+                disabled onclick="onbutton(0)">
+                Yes
+            </button>
+            <button id="right_button" class="mdl-button mdl-js-button mdl-button--raised" disabled
+                onclick="onbutton(1)">
+                No
+            </button>
+        </div>
+        <div style="text-align: center;">
+            <div id="progress-bar" class="mdl-progress mdl-js-progress mdl-progress__indeterminate"
+                style="transition: 0.5s opacity; opacity:0; display: inline-block;">
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -80,17 +92,23 @@
             right_button.disabled = true;
             answers.push(id);
             question.style.opacity = 0
-            window.setTimeout(() => nextQ(), 1000)
+            window.setTimeout(() => nextQ(), 500)
         }
 
         function onFinished() {
-            var url = new URL(window.location);
-            if (url.pathname == "/rentcom/")
-                url.pathname = "/rentcom/rentcom.html";
-            else
-                url.pathname = "/rentcom.html"
-            url.searchParams.set("v", 3);
-            document.location = url;
+            question.innerHTML = "Thanks! We'll use this to find the best home just for you."
+            question.style.opacity = 1;
+            document.getElementById("buttons").innerHTML = "";
+            document.getElementById("progress-bar").style.opacity = 1;
+            setTimeout(() => {
+                var url = new URL(window.location);
+                if (url.pathname == "/rentcom/")
+                    url.pathname = "/rentcom/rentcom.html";
+                else
+                    url.pathname = "/rentcom.html"
+                url.searchParams.set("v", 3);
+                document.location = url;
+            }, 3000);
         }
 
         window.onload = () => {
