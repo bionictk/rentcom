@@ -84,41 +84,37 @@
                 <div class="mdl-card__actions mdl-card--border">
                     <div class="mdl-grid">
                         <div class="mdl-cell mdl-cell--4-col">
-                            <span class="mdl-checkbox__label">Min Price: </span>
+                            <span class="mdl-checkbox__label">Min Price($):</span>
                         </div>
                         <div class="mdl-cell mdl-cell--8-col">
-                            <form>
-                                <div class="mdl-textfield mdl-js-textfield">
-                                    <input class="mdl-textfield__input" type="text" pattern="-?[0-9]*(\.[0-9]+)?"
-                                        id="min-price" value="0" onchange="updateMinPriceSlider()">
-                                    <label class="mdl-textfield__label" for="min-price">Number...</label>
-                                    <span class="mdl-textfield__error">Input is not a number!</span>
-                                </div>
-                            </form>
+                            <div class="mdl-textfield mdl-js-textfield">
+                                <input class="mdl-textfield__input" type="text" pattern="-?[0-9]*(\.[0-9]+)?"
+                                    id="min-price" value="0" onchange="updateMinPriceSlider()">
+                                <label class="mdl-textfield__label" for="min-price">Number...</label>
+                                <span class="mdl-textfield__error">Input is not a number!</span>
+                            </div>
                         </div>
                     </div>
-                    <input class="mdl-slider mdl-js-slider" type="range" min="0" max="100" value="0" tabindex="10"
+                    <input class="mdl-slider mdl-js-slider" type="range" min="0" max="10000" value="0" tabindex="10"
                         id="min-price-slider" onchange="updateMinPrice()">
                 </div>
 
                 <div class="mdl-card__actions mdl-card--border">
                     <div class="mdl-grid">
                         <div class="mdl-cell mdl-cell--4-col">
-                            <span class="mdl-checkbox__label">Max Price: </span>
+                            <span class="mdl-checkbox__label">Max Price($):</span>
                         </div>
                         <div class="mdl-cell mdl-cell--8-col">
-                            <form>
-                                <div class="mdl-textfield mdl-js-textfield">
-                                    <input class="mdl-textfield__input" type="text" pattern="-?[0-9]*(\.[0-9]+)?"
-                                        id="max-price" value="3000000" onchange="updateMaxPriceSlider()">
-                                    <label class="mdl-textfield__label" for="max-price">Number...</label>
-                                    <span class="mdl-textfield__error">Input is not a number!</span>
-                                </div>
-                            </form>
+                            <div class="mdl-textfield mdl-js-textfield">
+                                <input class="mdl-textfield__input" type="text" pattern="-?[0-9]*(\.[0-9]+)?"
+                                    id="max-price" value="10000" onchange="updateMaxPriceSlider()">
+                                <label class="mdl-textfield__label" for="max-price">Number...</label>
+                                <span class="mdl-textfield__error">Input is not a number!</span>
+                            </div>
                         </div>
                     </div>
-                    <input class="mdl-slider mdl-js-slider" type="range" min="0" max="3000000" value="3000000"
-                        tabindex="0" id="max-price-slider" onchange="updateMaxPrice()">
+                    <input class="mdl-slider mdl-js-slider" type="range" min="0" max="10000" value="10000" tabindex="0"
+                        id="max-price-slider" onchange="updateMaxPrice()">
                 </div>
 
                 <div class="mdl-card__actions mdl-card--border">
@@ -179,11 +175,11 @@
                     </div>
                 </div>
 
-                <div class="mdl-card__actions mdl-card--border">
+                <!-- <div class="mdl-card__actions mdl-card--border">
                     <button class="mdl-button mdl-js-button mdl-button--primary" onclick="resetChoices()">
                         Reset Choices
                     </button>
-                </div>
+                </div> -->
             </div>
 
             <div class="demo-card-square mdl-card mdl-shadow--2dp filtercardstyle secondcard">
@@ -300,6 +296,28 @@
             // TODO prestore then restore default values
             updateFilters();
         }
+
+        var HttpClient = function () {
+            this.get = function (aUrl, aCallback) {
+                var anHttpRequest = new XMLHttpRequest();
+                anHttpRequest.onreadystatechange = function () {
+                    if (anHttpRequest.readyState == 4 && anHttpRequest.status == 200)
+                        aCallback(anHttpRequest.responseText);
+                }
+
+                anHttpRequest.open("GET", aUrl, true);
+                anHttpRequest.send(null);
+            }
+        }
+
+
+        var client = new HttpClient();
+        client.get(
+            'http://ec2-34-233-120-144.compute-1.amazonaws.com:8000/matchmaker/start_listings/?latitude=40.710770&longitude=-74.012640',
+            function (response) {
+                // do something with response
+                console.log(response);
+            });
     </script>
 
 </body>

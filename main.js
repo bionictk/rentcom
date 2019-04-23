@@ -7,6 +7,15 @@ var circle;
 var map;
 var directionsDisplay;
 var directionsService;
+var allData;
+
+var mapBounds = {
+    north: 40.87904,
+    south: 40.68292,
+    west: -74.04773,
+    east: -73.90665
+};
+
 
 var workPlace = undefined;
 
@@ -30,6 +39,10 @@ function initMap() {
         zoom: 12,
         center: new google.maps.LatLng(40.74415, -73.94884),
         // mapTypeId: google.maps.MapTypeId.TERRAIN
+        restriction: {
+            latLngBounds: mapBounds,
+            strictBounds: false,
+        },
         gestureHandling: 'greedy',
         streetViewControl: false,
         fullscreenControl: false,
@@ -111,14 +124,17 @@ function initMap() {
 
         // console.log(jsonData);
         // d3.json(jsonFile)
-        var rawData = jsonData.map(e => {
-            e.fields.id = (e.pk % 1000);
+        var rawData = jsonData.map((e, i) => {
+            e.fields.id = i + 1;
+            // e.field.pk = e.pk;
             return e.fields
         });
 
         // console.log(data);
-        data = rawData.slice(0, 100)
+        // data = rawData.slice(0, 100)
         // data = data.listings;
+        data = rawData;
+        allData = data;
 
         document.getElementById("control-panel").style.height = window.innerHeight + "px";
 
@@ -156,18 +172,18 @@ function initMap() {
                             .transition().duration(150)
                             .style("fill", startColor)
                             .style("fill-opacity", "0.6")
-                            .attr("r", 10);
+                        // .attr("r", 10);
 
-                        d3.select("#listing" + d.value.id)
-                            .transition().duration(150)
-                            .attr("r", 10);
+                        // d3.select("#listing" + d.value.id)
+                        //     .transition().duration(150)
+                        //     .attr("r", 10);
                         clicked = undefined;
                     }
 
                     d3.selectAll("circle").filter(e => e.value.id != d.value.id)
                         .style("fill", startColor)
-                        .transition().duration(400)
-                        .attr("r", 7);
+                    // .transition().duration(400)
+                    // .attr("r", 7);
 
                     clicked = d.value.id;
 
@@ -191,10 +207,31 @@ function initMap() {
                     var start = new google.maps.LatLng(d.value.latitude, d.value.longitude);
                     var end = new google.maps.LatLng(workPlace[0], workPlace[1]);
 
+                    var radios = document.getElementsByName('transit_options');
+                    var transit_options;
+                    for (var i = 0, length = radios.length; i < length; i++) {
+                        if (radios[i].checked) {
+                            transit_options = radios[i].value;
+                            break;
+                        }
+                    }
+                    var travelm;
+                    if (transit_options == "walk") {
+                        travelm = google.maps.TravelMode.WALKING;
+                    } else if (transit_options == "bike") {
+                        travelm = google.maps.TravelMode.DRIVING;
+                        // travelm = google.maps.TravelMode.BICYCLING;
+                    } else if (transit_options == "transit") {
+                        travelm = google.maps.TravelMode.WALKING;
+                        // travelm = google.maps.TravelMode.TRANSIT;
+                    } else {
+                        travelm = google.maps.TravelMode.DRIVING;
+                    }
+
                     var request = {
                         origin: start,
                         destination: end,
-                        travelMode: google.maps.TravelMode.DRIVING
+                        travelMode: travelm
                     };
                     directionsService.route(request, function (response, status) {
                         if (status == google.maps.DirectionsStatus.OK) {
@@ -206,7 +243,7 @@ function initMap() {
 
                 var onHover = (d) => {
                     d3.select("#listing" + d.value.id)
-                        .transition().duration(200)
+                        // .transition().duration(200)
                         .style("fill", endColor)
                         .style("fill-opacity", "1.0");
                 };
@@ -243,6 +280,8 @@ function initMap() {
                         .style("left", (d.x - padding) + "px")
                         .style("top", (d.y - padding) + "px")
                 }
+
+                updateFilters();
             };
         };
 
@@ -252,9 +291,9 @@ function initMap() {
                 .classed("fadeInRight", false);
 
             if (clicked != undefined) {
-                d3.selectAll("circle")
-                    .transition().duration(400)
-                    .attr("r", 10);
+                // d3.selectAll("circle")
+                //     .transition().duration(400)
+                //     .attr("r", 10);
 
                 d3.select("#listing" + clicked)
                     .transition().duration(150)
@@ -344,31 +383,41 @@ function updateFilters() {
         }
     }
 
-    var minPrice = document.getElementById("min-price").value;
-    var maxPrice = document.getElementById("max-price").value;
-    var bedrooms = document.getElementById("bedrooms").value;
-    var bathrooms = document.getElementById("bathrooms").value;
-    var pets = document.getElementById("pets").checked;
-    var parking = document.getElementById("parking").checked;
-    var dishwasher = document.getElementById("dishwasher").checked;
-    var wd = document.getElementById("wd").checked;
+    var minPrice = +document.getElementById("min-price").value;
+    var maxPrice = +document.getElementById("max-price").value;
+    var bedrooms = +document.getElementById("bedrooms").value;
+    var bathrooms = +document.getElementById("bathrooms").value;
+    var pets = document.getElementById("pets").checked ? 1 : 0;
+    var parking = document.getElementById("parking").checked ? 1 : 0;
+    var dishwasher = document.getElementById("dishwasher").checked ? 1 : 0;
+    var wd = document.getElementById("wd").checked ? 1 : 0;
 
     // console.log(transit_options, minPrice, maxPrice);
     // console.log(bedrooms, bathrooms);
     // console.log(pets, parking, dishwasher, wd);
 
     // update showings
-    //TODO: update data points using above filters
+    if (allData != undefined) {
+        d3.selectAll("circle").attr("r", 6);
+        allData.forEach(d => {
+            if (!(d.price < minPrice || d.price > maxPrice || d.bedrooms != bedrooms || d.bathrooms != bathrooms || d.dishwasher != dishwasher || d.parking != parking || d.pets != pets || d.wd != wd)) {
+                console.log(d.price, maxPrice);
+                d3.select("#listing" + d.id)
+                    // .transition().duration(150)
+                    .attr("r", 10);
+            }
+        });
+    }
 
     // close hover 
-    d3.select("#hovercard")
-        .classed("fadeOutRight", true)
-        .classed("fadeInRight", false);
+    // d3.select("#hovercard")
+    //     .classed("fadeOutRight", true)
+    //     .classed("fadeInRight", false);
 
     if (clicked != undefined) {
-        d3.selectAll("circle")
-            .transition().duration(400)
-            .attr("r", 10);
+        // d3.selectAll("circle")
+        //     .transition().duration(400)
+        //     .attr("r", 10);
 
         d3.select("#listing" + clicked)
             .transition().duration(150)
@@ -391,10 +440,10 @@ function getRecommendations(bedrooms, bathrooms, pets, dishwasher, wd, parking) 
             alpha: 1,
             bedrooms: bedrooms,
             bathrooms: bathrooms,
-            pets: pets ? 1 : 0,
-            dishwasher: dishwasher ? 1 : 0,
-            wd: wd ? 1 : 0,
-            parking: parking ? 1 : 0
+            pets: pets,
+            dishwasher: dishwasher,
+            wd: wd,
+            parking: parking
         }
     Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
     fetch(url).then(d => d.json()).then(rawData => {
