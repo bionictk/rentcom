@@ -78,7 +78,7 @@ function initMap() {
         var latlng = e.latLng;
         var lat = latlng.lat();
         var long = latlng.lng();
-        console.log(lat, long);
+        // console.log(lat, long);
 
         Popup = createPopupClass();
         popup = new Popup(new google.maps.LatLng(lat, long), document.getElementById('work'));
@@ -89,167 +89,187 @@ function initMap() {
 
         workPlace = [lat, long];
         google.maps.event.removeListener(workPlaceClickListener);
-        setTimeout(getListings, 500);
+
+        map.setZoom(14);
+        map.panTo(new google.maps.LatLng(workPlace[0], workPlace[1]));
+
+        var url = new URL("http://ec2-34-233-120-144.compute-1.amazonaws.com:8000/matchmaker/start_listings/"),
+            params = {
+                latitude: lat,
+                longitude: long
+            }
+        Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
+        fetch(url).then(d => d.json()).then(getListings);
     });
 
-    getListings = () => {
-        var url = "rental_coords_small_mod.csv"
+    getListings = (jsonData) => {
+        // 
+        // smoothZoom(map, 15, map.getZoom());
+        // var url = "rental_coords_small_mod.csv"
         // var url = "rental_coords_large.csv"
-        var jsonFile = "sample_data.json";
+        // var jsonFile = "sample_data.json";
 
+        // console.log(jsonData);
         // d3.json(jsonFile)
-        d3.csv(url, d => {
-                // console.log(d);
-                return {
-                    id: +d.id,
-                    latitude: +d.long,
-                    longitude: +d.lat
-                };
-            })
-            .then(data => {
-                // console.log(data);
-                data = data.slice(0, 100)
-                // data = data.listings;
+        var rawData = jsonData.map(e => {
+            e.fields.id = (e.pk % 1000);
+            return e.fields
+        });
 
-                document.getElementById("control-panel").style.height = window.innerHeight + "px";
+        // console.log(data);
+        data = rawData.slice(0, 100)
+        // data = data.listings;
 
-                // Add the container when the overlay is added to the map.
-                overlay.onAdd = function () {
-                    var layer = d3.select(this.getPanes().floatPane).append("div")
-                        .attr("class", "places");
+        document.getElementById("control-panel").style.height = window.innerHeight + "px";
 
-                    // Draw each marker as a separate SVG element.
-                    // We could use a single SVG, but what size would it have?
-                    overlay.draw = function () {
-                        var projection = this.getProjection(),
-                            padding = 10;
+        // Add the container when the overlay is added to the map.
+        overlay.onAdd = function () {
+            var layer = d3.select(this.getPanes().floatPane).append("div")
+                .attr("class", "places");
 
-                        var marker = layer.selectAll("svg")
-                            .data(d3.entries(data))
-                            .each(transform) // update existing markers
-                            .enter().append("svg")
-                            .each(transform)
-                            .attr("class", "marker");
+            // Draw each marker as a separate SVG element.
+            // We could use a single SVG, but what size would it have?
+            overlay.draw = function () {
+                var projection = this.getProjection(),
+                    padding = 10;
 
-                        // Add a circle.
-                        circle = marker.append("circle")
-                            .attr("id", d => "listing" + d.value.id)
-                            .attr("r", 10)
-                            .attr("cx", padding)
-                            .attr("cy", padding)
-                            .style("fill", startColor)
-                            .style("fill-opacity", "0.6");
+                var marker = layer.selectAll("svg")
+                    .data(d3.entries(data))
+                    .each(transform) // update existing markers
+                    .enter().append("svg")
+                    .each(transform)
+                    .attr("class", "marker");
 
-                        var onClick = (d) => {
-                            d3.event.stopPropagation();
-                            if (clicked != undefined && clicked != d.value.id) {
-                                d3.select("#listing" + clicked)
-                                    .transition().duration(150)
-                                    .style("fill", startColor)
-                                    .style("fill-opacity", "0.6")
-                                    .attr("r", 10);
+                // Add a circle.
+                circle = marker.append("circle")
+                    .attr("id", d => "listing" + d.value.id)
+                    .attr("r", 10)
+                    .attr("cx", padding)
+                    .attr("cy", padding)
+                    .style("fill", startColor)
+                    .style("fill-opacity", "0.6");
 
-                                d3.select("#listing" + d.value.id)
-                                    .transition().duration(150)
-                                    .attr("r", 10);
-                                clicked = undefined;
-                            }
-
-                            d3.selectAll("circle").filter(e => e.value.id != d.value.id)
-                                .style("fill", startColor)
-                                .transition().duration(400)
-                                .attr("r", 7);
-
-                            clicked = d.value.id;
-
-                            loadImages(d.value.id % 33);
-                            d3.select("#hovercard")
-                                .style("visibility", "visible")
-                                .classed("fadeOutRight", false)
-                                .classed("fadeInRight", true);
-
-                            // console.log(d.value.id)
-                            var start = new google.maps.LatLng(d.value.latitude, d.value.longitude);
-                            var end = new google.maps.LatLng(workPlace[0], workPlace[1]);
-
-                            var request = {
-                                origin: start,
-                                destination: end,
-                                travelMode: google.maps.TravelMode.DRIVING
-                            };
-                            directionsService.route(request, function (response, status) {
-                                if (status == google.maps.DirectionsStatus.OK) {
-                                    directionsDisplay.setMap(map);
-                                    directionsDisplay.setDirections(response);
-                                };
-                            });
-                        };
-
-                        var onHover = (d) => {
-                            d3.select("#listing" + d.value.id)
-                                .transition().duration(200)
-                                .style("fill", endColor)
-                                .style("fill-opacity", "1.0");
-                        };
-
-                        var onHoverEnd = (d) => {
-                            if (d.value.id != clicked) {
-                                d3.select("#listing" + d.value.id)
-                                    .transition().duration(150)
-                                    .style("fill", startColor)
-                                    .style("fill-opacity", "0.6");
-                            }
-                        };
-
-                        circle.on("click", onClick);
-                        circle.on("mouseover", onHover);
-                        circle.on("mouseout", onHoverEnd);
-
-                        marker.append("text")
-                            .attr("x", padding)
-                            .attr("y", padding)
-                            .attr("dy", ".35em")
-                            .text(function (d) {
-                                return d.value.id;
-                            })
-                            .style("pointer-events", "none");
-
-                        function transform(d) {
-                            // console.log(d);
-                            d = d.value;
-                            d = new google.maps.LatLng(d.latitude, d.longitude);
-                            d = projection.fromLatLngToDivPixel(d);
-
-                            return d3.select(this)
-                                .style("left", (d.x - padding) + "px")
-                                .style("top", (d.y - padding) + "px")
-                        }
-                    };
-                };
-
-                map.addListener('click', (e) => {
-                    d3.select("#hovercard")
-                        .classed("fadeOutRight", true)
-                        .classed("fadeInRight", false);
-
-                    if (clicked != undefined) {
-                        d3.selectAll("circle")
-                            .transition().duration(400)
-                            .attr("r", 10);
-
+                var onClick = (d) => {
+                    d3.event.stopPropagation();
+                    if (clicked != undefined && clicked != d.value.id) {
                         d3.select("#listing" + clicked)
                             .transition().duration(150)
                             .style("fill", startColor)
-                            .style("fill-opacity", "0.6");
+                            .style("fill-opacity", "0.6")
+                            .attr("r", 10);
+
+                        d3.select("#listing" + d.value.id)
+                            .transition().duration(150)
+                            .attr("r", 10);
                         clicked = undefined;
                     }
 
-                    directionsDisplay.setMap(null);
-                });
+                    d3.selectAll("circle").filter(e => e.value.id != d.value.id)
+                        .style("fill", startColor)
+                        .transition().duration(400)
+                        .attr("r", 7);
 
-                // Bind our overlay to the map…
-                overlay.setMap(map);
-            })
+                    clicked = d.value.id;
+
+                    d3.select("#c-address").text(d.value.address);
+                    d3.select("#c-price").text(moneyformat(d.value.price));
+                    d3.select("#c-bedrooms").text(d.value.bedrooms);
+                    d3.select("#c-bathrooms").text(d.value.bathrooms);
+                    d3.select("#c-pics").text("Yes");
+                    d3.select("#c-pets").text(d.value.pets == 0 ? "No" : "Yes");
+                    d3.select("#c-parking").text(d.value.parking == 0 ? "No" : "Yes");
+                    d3.select("#c-dishwasher").text(d.value.dishwasher == 0 ? "No" : "Yes");
+                    d3.select("#c-wd").text(d.value.wd == 0 ? "No" : "Yes");
+
+                    loadImages(d.value.id % 33);
+                    d3.select("#hovercard")
+                        .style("visibility", "visible")
+                        .classed("fadeOutRight", false)
+                        .classed("fadeInRight", true);
+
+                    console.log(d)
+                    var start = new google.maps.LatLng(d.value.latitude, d.value.longitude);
+                    var end = new google.maps.LatLng(workPlace[0], workPlace[1]);
+
+                    var request = {
+                        origin: start,
+                        destination: end,
+                        travelMode: google.maps.TravelMode.DRIVING
+                    };
+                    directionsService.route(request, function (response, status) {
+                        if (status == google.maps.DirectionsStatus.OK) {
+                            directionsDisplay.setMap(map);
+                            directionsDisplay.setDirections(response);
+                        };
+                    });
+                };
+
+                var onHover = (d) => {
+                    d3.select("#listing" + d.value.id)
+                        .transition().duration(200)
+                        .style("fill", endColor)
+                        .style("fill-opacity", "1.0");
+                };
+
+                var onHoverEnd = (d) => {
+                    if (d.value.id != clicked) {
+                        d3.select("#listing" + d.value.id)
+                            .transition().duration(150)
+                            .style("fill", startColor)
+                            .style("fill-opacity", "0.6");
+                    }
+                };
+
+                circle.on("click", onClick);
+                circle.on("mouseover", onHover);
+                circle.on("mouseout", onHoverEnd);
+
+                marker.append("text")
+                    .attr("x", padding)
+                    .attr("y", padding)
+                    .attr("dy", ".35em")
+                    .text(function (d) {
+                        return d.value.id;
+                    })
+                    .style("pointer-events", "none");
+
+                function transform(d) {
+                    // console.log(d);
+                    d = d.value;
+                    d = new google.maps.LatLng(d.latitude, d.longitude);
+                    d = projection.fromLatLngToDivPixel(d);
+
+                    return d3.select(this)
+                        .style("left", (d.x - padding) + "px")
+                        .style("top", (d.y - padding) + "px")
+                }
+            };
+        };
+
+        map.addListener('click', (e) => {
+            d3.select("#hovercard")
+                .classed("fadeOutRight", true)
+                .classed("fadeInRight", false);
+
+            if (clicked != undefined) {
+                d3.selectAll("circle")
+                    .transition().duration(400)
+                    .attr("r", 10);
+
+                d3.select("#listing" + clicked)
+                    .transition().duration(150)
+                    .style("fill", startColor)
+                    .style("fill-opacity", "0.6");
+                clicked = undefined;
+            }
+
+            directionsDisplay.setMap(null);
+        });
+
+        // Bind our overlay to the map…
+        overlay.setMap(map);
+
+        updateFilters();
     }
 }
 
@@ -359,7 +379,32 @@ function updateFilters() {
 
     directionsDisplay.setMap(null);
 
-    getListings();
+    // getListings();
+    getRecommendations(bedrooms, bathrooms, pets, dishwasher, wd, parking);
+}
+
+function getRecommendations(bedrooms, bathrooms, pets, dishwasher, wd, parking) {
+    var url = new URL("http://ec2-34-233-120-144.compute-1.amazonaws.com:8000/matchmaker/recommendations/"),
+        params = {
+            latitude: workPlace[0],
+            longitude: workPlace[1],
+            alpha: 1,
+            bedrooms: bedrooms,
+            bathrooms: bathrooms,
+            pets: pets ? 1 : 0,
+            dishwasher: dishwasher ? 1 : 0,
+            wd: wd ? 1 : 0,
+            parking: parking ? 1 : 0
+        }
+    Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
+    fetch(url).then(d => d.json()).then(rawData => {
+        var data = rawData.map(e => e.fields);
+        // console.log(data);
+
+        for (var i = 0; i < 6; i++) {
+            d3.select("#rec" + i).text("#" + (i + 1) + ": " + data[i].address);
+        }
+    });
 }
 
 function createPopupClass() {
@@ -424,3 +469,5 @@ function createPopupClass() {
 
     return Popup;
 }
+
+var moneyformat = d3.format("$,");

@@ -44,12 +44,12 @@ svg {
 }
 
 .places circle {
-    /* fill: brown;
-    stroke: black;
-    stroke-width: 1.5px; */
-    /* fill: rgb(31, 186, 214);
-    fill-opacity: 0.6; */
-    stroke-width: 0;
+    /* fill: brown; */
+    stroke: rgb(19, 75, 85);
+    stroke-width: 0.5px;
+    /* fill: rgb(31, 186, 214); */
+    /* fill-opacity: 0.6; */
+    /* stroke-width: 0; */
 }
 
 .filtercardstyle {
